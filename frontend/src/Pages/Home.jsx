@@ -10,24 +10,31 @@ const Home = () => {
   const [username, setUsername] = useState("");
   useEffect(() => {
     const verifyCookie = async () => {
-      if (!cookies.token) {
+      try {
+        const { data } = await axios.post(
+          "http://localhost:3001",
+          {},
+          { withCredentials: true }
+        );
+
+        if (data.success) {
+          setUsername(data.user);
+          toast(`Hello ${data.user}`, {
+            position: "top-right",
+          });
+        } else {
+          removeCookie("token");
+          navigate("/login");
+        }
+      } catch (err) {
+        console.log("Error Occured during verification at frontend" + err)
+        removeCookie("token");
         navigate("/login");
       }
-      const { data } = await axios.post(
-        "http://localhost:3001",
-        {},
-        { withCredentials: true }
-      );
-      const { status, user } = data;
-      setUsername(user);
-      return status
-        ? toast(`Hello ${user}`, {
-            position: "top-right",
-          })
-        : (removeCookie("token"), navigate("/login"));
     };
+
     verifyCookie();
-  }, [cookies, navigate, removeCookie]);
+  }, [navigate, removeCookie]);
   const Logout = () => {
     removeCookie("token");
     navigate("/signup");
